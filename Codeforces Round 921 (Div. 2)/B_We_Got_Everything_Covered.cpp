@@ -1,46 +1,54 @@
 #include <iostream>
 #include <algorithm>
-#include <cstring>
+#include <vector>
 #include <cmath>
 #include <queue>
-#include <vector>
+#include <numeric>
+#include <set>
 #include <stack>
 #include <map>
-#include <set>
 using namespace std;
 
 typedef long long LL;
 
-void solve() {
-    int n, k;
-    cin >> n >> k;
-    if (n <= k) {
-        for (char i = 'a'; i < 'a' + n; i++) {
-            cout << i;
-            for (char j = 'a'; j < 'a' + k; j++) {
-                if (j == i) continue;
-                cout << j;
+vector<int> get_factor(int x) {
+    vector<int> factor;
+    for (int i = 1; i * i <= x; i++) {
+        if (x % i == 0) {
+            if (i * i != x) {
+                factor.push_back(x / i);
             }
+            factor.push_back(i);
         }
-        cout << '\n';
-    } else {
-        // 
-        for (int i = 0; i < n; i++) {
-            for (char j = 'a'; j < 'a' + k; j++) {
-                cout << j;
-            }
-        }
-        cout << '\n';
     }
-    
-    return;
+    return factor;
+}
+
+void solve() {
+    int x, n;
+    cin >> x >> n;
+    vector<int> factor = get_factor(x);
+    sort(factor.begin(), factor.end());
+
+    int res;
+    for (int fac : factor) {
+        if (x / fac < n) {
+            break;
+        } else {
+            res = fac;
+        }
+    }
+    cout << res << '\n';
+    return; 
 }
 
 int main() {
     ios::sync_with_stdio(false);
-    int t;
-    cin >> t;
-    while (t--) {
+    cin.tie(0);
+    cout.tie(0);
+    int T;
+    cin >> T;
+    while (T--) {
         solve();
     }
     return 0;
