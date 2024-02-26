@@ -1,51 +1,61 @@
 #include <iostream>
-#include <vector>
-#include <queue>
 #include <algorithm>
-#include <string>
-#include <stdio.h>
+#include <vector>
+#include <cmath>
+#include <cstring>
+#include <queue>
+#include <numeric>
+#include <set>
+#include <stack>
+#include <map>
 using namespace std;
+
+typedef long long LL;
+
+int digit(string &s) {
+    int sum = 0;
+    for (auto c : s) {
+        sum += (c - '0');
+    }
+    return sum;
+}
 
 void solve() {
     int n;
     cin >> n;
-    vector<vector<int> > cnt(6, vector<int> (50)); // 记录每个长度的数字和的个数
-    vector<vector<int> > sum(n, vector<int> (6)); // 记录每个数字的前各位数字和
+    string s[n];
+    map<pair<int, int>, int> st;
     for (int i = 0; i < n; i++) {
-        string s;
-        cin >> s;
+        cin >> s[i];
+        int len = s[i].size(), sum = digit(s[i]);
+        st[{len, sum}]++;
+    }
 
-        int len = s.size(), sumx = 0;
-        sum[i][0] = len; // 存储第i个数字的长度
-        for (int j = 0; j < len; j++) {
-            sumx += s[j] - '0';
-            sum[i][j + 1] = sumx;
-        }
-        // cout << sum << endl;
-        cnt[len][sumx]++;
-    }
-    
-    long long ans = 0;
+    LL res = 0;
     for (int i = 0; i < n; i++) {
-        int len = sum[i][0];
-        sum[i][0] = 0;
-        for (int j = (len & 1); j <= len; j += 2) {
-            if (j == 0) continue;
-            int half = (len + j) / 2;
-            if (len == j)
-                ans += cnt[len][sum[i][half]];
-            else {
-                ans += cnt[j][sum[i][half] + sum[i][half] - sum[i][len]];
-                ans += cnt[j][sum[i][len] - 2 * sum[i][half - j]];
-            }
+        int slen = s[i].size();
+        int sum = digit(s[i]);
+        for (int j = 0; j < slen; j++) {
+            string t = s[i].substr(0, j);
+            int sum1 = digit(t), sum2 = sum - sum1;
+            // head
+            res += st[{slen - 2 * j, sum2 - sum1}];
+            // tail
+            res += st[{2 * j - slen, sum1 - sum2}];
         }
     }
-    cout << ans << endl;
+    cout << res << '\n';
     return;
 }
 
 int main() {
     ios::sync_with_stdio(false);
-    solve();
+    cin.tie(0);
+    cout.tie(0);
+    int T = 1;
+    // cin >> T;
+    while (T--) {
+        solve();
+    }
     return 0;
 }
