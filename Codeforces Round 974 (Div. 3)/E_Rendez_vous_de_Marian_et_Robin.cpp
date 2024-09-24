@@ -10,60 +10,39 @@ using LL = long long;
 using PLI = pair<LL, int>;
 const LL INF = 1e18;
 
-struct Status {
-    LL dis;
-    int u, h;
-    bool operator<(const Status &other) const {
-        return dis > other.dis;
-    }
-};
-
 vector<LL> dijkstra(int s, const vector<int> &horse, const vector<vector<PLI>> &G) {
     int n = horse.size();
-    vector<vector<int>> vis(n, vector<int> (2));
-    vector<vector<LL>> dis(n, vector<LL> (2, INF));
-    vector<LL> ans(n);
-    priority_queue<Status> pq;
-    pq.push({0LL, s, horse[s]});
-    dis[s][horse[s]] = 0;
+    vector<int> vis(2 * n);
+    vector<LL> dis(2 * n, INF);
+    priority_queue<PLI, vector<PLI>, greater<>> pq;
+    if (horse[s]) {
+        pq.push({0LL, s + n});
+        dis[s + n] = 0;
+    } else {
+        pq.push({0LL, s});
+        dis[s] = 0;
+    }
     
     while (!pq.empty()) {
-        auto [d, x, h] = pq.top();
+        auto [d, x] = pq.top();
         pq.pop();
-        if (vis[x][h]) {
+        if (vis[x]) {
             continue;
         }
-        vis[x][h] = 1;
+        vis[x] = 1;
         
         for (auto [w, y] : G[x]) {
-            // 如果该状态是'骑马'
-            if (h) {
-                if (dis[x][1] + w / 2 < dis[y][1]) {
-                    dis[y][1] = dis[x][1] + w / 2;
-                    pq.push({dis[y][1], y, 1});
-                }
-                // if (dis[x][1] + w / 2 < dis[y][0]) {
-                //     dis[y][0] = dis[x][1] + w;
-                //     pq.push({dis[y][1], y, 0});
-                // }
-            } else {
-                if (dis[x][0] + w < dis[y][horse[y]]) {
-                    dis[y][horse[y]] = dis[x][0] + w;
-                    pq.push({dis[y][horse[y]], y, horse[y]});
-                }
+            if (dis[x] + w < dis[y]) {
+                dis[y] = dis[x] + w;
+                pq.push({dis[y], y});
             }
         }
     }
 
+    vector<LL> ans(n);
     for (int i = 0; i < n; i++) {
-        ans[i] = min(dis[i][0], dis[i][1]);
+        ans[i] = min(dis[i], dis[i + n]);
     }
-
-    // for (int i = 0; i < n; i++) {
-    //     cout << ans[i] << ' ';
-    // }
-    // cout << '\n';
-
     return ans;
 }
 
@@ -78,13 +57,27 @@ void solve() {
         horse[x - 1] = 1;
     }
     
-    vector<vector<PLI>> G(n);  
+    vector<vector<PLI>> G(2 * n);
+    vector<int> vis(n);
     for (int i = 0; i < m; i++) {
         int u, v, w;
         cin >> u >> v >> w;
         u--, v--;
         G[u].push_back({w, v});
         G[v].push_back({w, u});
+        G[u + n].push_back({w / 2, v + n});
+        G[v + n].push_back({w / 2, u + n});
+
+        if (horse[u] && !vis[u]) {
+            vis[u] = 1;
+            G[u].push_back({0, u + n});
+            G[u + n].push_back({0, u});
+        }
+        if (horse[v] && !vis[v]) {
+            vis[v] = 1;
+            G[v].push_back({0, v + n});
+            G[v + n].push_back({0, v});
+        }
     }
     
     vector<LL> distM = dijkstra(0, horse, G); 
