@@ -2,6 +2,7 @@
 // #pragma GCC target("avx2,bmi,bmi2,lzcnt,popcnt")
 #include <iostream>
 #include <vector>
+#include <array>
 #include <cstring>
 #include <algorithm>
 #include <queue>
@@ -16,91 +17,75 @@ using namespace std;
 using LL = long long;
 using PII = pair<int, int>;
 
+const int N = 1e6 + 5;
+
+int f[N + 5];
+
 void solve() {
     int n, q;
     cin >> n >> q;
     vector<int> a(n + 1);
     for (int i = 1; i <= n; i++) {
         cin >> a[i];
+        f[a[i]] = 0; // 初始化
     }
 
-    int block = sqrt(n - 1) + 1, m = round(sqrt(n)); // block块, 每块m大小
-    vector<PII> ori_query(q);
-    vector<vector<PII>> query(block);
+    int batch = sqrt(n) + 1;
+    vector<array<int, 3>> query(q);
     for (int i = 0; i < q; i++) {
         int l, r;
-        cin >> l >> r;
-        ori_query[i] = {l, r};
-        query[(l - 1) / m].push_back({l, r});
+        cin >> query[i][0] >> query[i][1];
+        query[i][2] = i;
     }
-    for (auto &v : query) {
-        sort(v.begin(), v.end(), [](const PII a, const PII b) {
-            return a.second < b.second;
-        });
-    }
+    sort(query.begin(), query.end(), [&](array<int, 3> &a, array<int, 3> &b) {
+        return make_pair(a[0] / batch, a[1] / batch) < make_pair(b[0] / batch, b[1] / batch);
+    });
+
     int cnt = 0;
-    map<int, int> mp;
     auto add = [&](int l, int r) -> void {
-        for (int i = l; i <= r; i++) {            
-            auto freq = mp[a[i]]++;
-            if (freq > 1) {
-                if (freq % 2 == 0) {
-                    cnt++;
-                } else {
-                    cnt--;
-                }
-            }
+        for (int i = l; i <= r; i++) {
+            f[a[i]] = 1 - f[a[i]];
+            cnt += f[a[i]] == 0 ? -1 : 1;
         }
     };
     auto remove = [&](int l, int r) -> void {
-        int odd = 0;
         for (int i = l; i <= r; i++) {
-            auto freq = mp[a[i]]--;
-            if (mp[a[i]] == 0) {
-                mp.erase(a[i]);
-            }
-            if (freq >= 1) {
-                if (freq % 2 == 0) {
-                    cnt++;
-                } else {
-                    cnt--;
-                }
-            }
+            f[a[i]] = 1 - f[a[i]];
+            cnt += f[a[i]] == 0 ? -1 : 1;
         }
     };
 
     map<PII, string> ans;
     PII last = {-1, -1};
-    for (auto v : query) {
-        for (auto x : v) {
-            auto [l, r] = x;
-            auto [ll, rr] = last;
-            if (ll == -1) {
-                add(l, r);
+    for (auto arr : query) {
+        int l = arr[0], r = arr[1];
+        auto [ll, rr] = last;
+        if (ll == -1) {
+            add(l, r);
+        } else {
+            if (l < ll) {
+                add(l, ll - 1);
             } else {
-                if (l < ll) {
-                    add(l, ll - 1);
-                } else {
-                    remove(ll, l - 1);
-                }
-                if (r < rr) {
-                    remove(r + 1, rr);
-                } else {
-                    add(rr + 1, r);
-                }
+                remove(ll, l - 1);
             }
-            last = x;
-            
-            if (cnt == mp.size()) {
-                ans[x] = "YES\n";
+            if (r < rr) {
+                remove(r + 1, rr);
             } else {
-                ans[x] = "NO\n";
+                add(rr + 1, r);
             }
         }
+        last = make_pair(l, r);
+
+        ans[{l, r}] = cnt ? "NO\n" : "YES\n";
     }
 
-    for (auto q : ori_query) {
-        cout << ans[q];
+    sort(query.begin(), query.end(), [&](array<int, 3> &a, array<int, 3> &b) {
+        return a[2] < b[2];
+    });
+
+    for (auto arr : query) {
+        auto x = make_pair(arr[0], arr[1]);
+        cout << ans[x];
     }
 }
 
