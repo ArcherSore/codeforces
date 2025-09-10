@@ -83,9 +83,9 @@ void solve() {
         adj[v].push_back(u);
     }
     const int LOG = __lg(n) + 1;
-    vector<vector<int>> parent(n, vector<int> (LOG));
+    vector<vector<int>> parent(LOG, vector<int> (n));
     auto dfs = [&](auto &&self, int u, int fa) -> void {
-        parent[u][0] = fa;
+        parent[0][u] = fa;
         for (int v : adj[u]) {
             if (v == fa) {
                 continue;
@@ -96,10 +96,10 @@ void solve() {
     dfs(dfs, 0, -1);
     for (int k = 0; k < LOG - 1; k++) {
         for (int u = 0; u < n; u++) {
-            if (parent[u][k] != -1) {
-                parent[u][k + 1] = parent[parent[u][k]][k];
+            if (parent[k][u] != -1) {
+                parent[k + 1][u] = parent[k][parent[k][u]];
             } else {
-                parent[u][k + 1] = -1;
+                parent[k + 1][u] = -1;
             }
         }
     }
@@ -109,14 +109,14 @@ void solve() {
     auto check = [&](int u, int v) -> bool {
         int cu = dsu.find(u), cv = dsu.find(v);
         for (int k = LOG - 1; k >= 0; k--) {
-            if (parent[u][k] != -1 && dsu.find(parent[u][k]) == cu) {
-                u = parent[u][k];
+            if (parent[k][u] != -1 && dsu.find(parent[k][u]) == cu) {
+                u = parent[k][u];
             }
-            if (parent[v][k] != -1 && dsu.find(parent[v][k]) == cv) {
-                v = parent[v][k];
+            if (parent[k][v] != -1 && dsu.find(parent[k][v]) == cv) {
+                v = parent[k][v];
             }
         }
-        u = parent[u][0], v = parent[v][0];
+        u = parent[0][u], v = parent[0][v];
         if (u != -1 && dsu.find(u) == cv || v != -1 && dsu.find(v) == cu) {
             return true;
         }
